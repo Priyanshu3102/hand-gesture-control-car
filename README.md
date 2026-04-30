@@ -19,7 +19,8 @@ This project controls a robotic car using hand gestures detected via a camera.
 
 ## 🖼️ Project Demo
 
-(Add images or video link here)
+<img width="1536" height="1024" alt="Hand Gesture" src="https://github.com/user-attachments/assets/e52d247a-6773-44ef-b185-7b1d1a0c63ba" />
+
 
 ## 🔌 Circuit Diagram
 
