@@ -1,0 +1,58 @@
+import cv2
+import mediapipe as mp
+import requests
+
+ESP_IP = "http://192.168.1.xxx"
+
+mp_hands = mp.solutions.hands
+hands = mp_hands.Hands(max_num_hands=1)
+mp_draw = mp.solutions.drawing_utils
+cap = cv2.VideoCapture(0)
+
+def get_gesture(landmarks):
+    wrist = landmarks[0]
+    index_tip = landmarks[8]
+
+    dx = index_tip.x - wrist.x
+    dy = index_tip.y - wrist.y
+
+    if abs(dx) < 0.1 and dy < -0.1:
+        return 'F'
+    elif dx > 0.1:
+        return 'R'
+    elif dx < -0.1:
+        return 'L'
+    elif dy > 0.1:
+        return 'B'
+    else:
+        return 'S'
+
+prev_command = ''
+
+while True:
+    ret, frame = cap.read()
+    if not ret:
+        break
+
+    frame = cv2.flip(frame, 1)
+    rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    result = hands.process(rgb)
+
+    if result.multi_hand_landmarks:
+        for hand_landmarks in result.multi_hand_landmarks:
+            mp_draw.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
+            command = get_gesture(hand_landmarks.landmark)
+            if command != prev_command:
+                try:
+                    requests.post(f"{ESP_IP}/move", data={'dir': command})
+                    print(f"Sent command: {command}")
+                except:
+                    print("ESP not reachable")
+                prev_command = command
+
+    cv2.imshow("Gesture Control", frame)
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+cap.release()
+cv2.destroyAllWindows()
